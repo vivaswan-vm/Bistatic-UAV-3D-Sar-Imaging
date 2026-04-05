@@ -63,12 +63,14 @@ err_3D = zeros(length(Method_Flag), ...
 % ==============================
 
 rng(11);% fixing seed value for all scenarios
+static_config = initialisation_static_config();
 for l = 1:Number_of_Iterations
     % TIMING ANALYSIS: comment out these two lines when not needed
     iterationTimer = tic;
 
     % Initialization
-    [struc_constants,struc_trajectory, radar, platform, target] = initialisation_func_v2(l);
+    [struc_constants,struc_trajectory, radar, platform, target] = ...
+        initialisation_monte_carlo_scenario(static_config, l);
 
     % Ground truth
     peak_rcs = max(target.rcs_lin);
