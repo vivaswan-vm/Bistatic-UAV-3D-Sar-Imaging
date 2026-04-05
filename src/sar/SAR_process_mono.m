@@ -1,4 +1,4 @@
-function [x_points_e ,y_points_e ,z_points_e, range,cross_range] = SAR_process_mono(platform,radar,target, waveform, coarse_mocomp_flag, std_dev)
+function [x_points_e ,y_points_e ,z_points_e, range,cross_range] = SAR_process_mono(platform,radar,target, isac_waveform, waveform, coarse_mocomp_flag, std_dev)
 
 % envelope values
 radar.w_r=1;
@@ -33,8 +33,7 @@ if waveform == 1
     TxChirp = exp(+1i*pi*Kr.*ChirpTimeSamples.^2);
 else 
     %ISAC Waveform
-    isac = load(project_data_path('ISAC_waveform_v2.mat'));
-    TxChirp = isac.tx(1:length(ChirpTimeSamples));
+    TxChirp = isac_waveform(1:length(ChirpTimeSamples));
 end
 
 % Number of time (Range) samples) (SwathSamples + PulseWidthSamples)

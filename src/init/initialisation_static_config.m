@@ -70,9 +70,11 @@ function static_config = initialisation_static_config()
     y_car = load(project_data_path("car_y.mat"));
     z_car = load(project_data_path("car_z.mat"));
     rcs_c = load(project_data_path("car_rcs.mat"));
+    isac_waveform = load(project_data_path("ISAC_waveform_v2.mat"));
 
     static_config.static_assets.x_points = x_car.x_centre;
     static_config.static_assets.y_points = y_car.y_centre;
     static_config.static_assets.z_points = z_car.z_centre;
     static_config.static_assets.rcs_table = rcs_c.r1;
+    static_config.isac_waveform = isac_waveform.tx;
 end
