@@ -9,21 +9,21 @@ addpath(genpath(fullfile(projectRoot, 'src')));
 % Flags
 % ==============================
 
-% Method_Flag       = [1 2];   % 1 = Bistatic, 2 = InSAR
-% Waveform_Flag     = [1 2];   % 1 = FMCW, 2 = ISAC
-% Motion_Comp_Flag  = [1 2];   % 1 = With, 2 = Without
+Method_Flag       = [1 2];   % 1 = Bistatic, 2 = InSAR
+Waveform_Flag     = [1 2];   % 1 = FMCW, 2 = ISAC
+Motion_Comp_Flag  = [1 2];   % 1 = With, 2 = Without
+
+Number_of_Iterations = 200;
+Std_Dev_Vel = [0.1  0.5  1.5 1 5 7 10]; % Log Spaced Sweep
+
+%Test Setup
 % 
-% Number_of_Iterations = 200;
-% Std_Dev_Vel = [0.1  0.5  1.5 5  10]; % Log Spaced Sweep
-
-%Test Confiuration
-
-Method_Flag       = [1];   
-Waveform_Flag     = [1];  
-Motion_Comp_Flag  = [1];  
-
-Number_of_Iterations = 1;
-Std_Dev_Vel = [0.1]; % Log Spaced Sweep
+% Method_Flag       = [2];   
+% Waveform_Flag     = [1];  
+% Motion_Comp_Flag  = [1];  
+% 
+% Number_of_Iterations = 1;
+% Std_Dev_Vel = [0.1]; % Log Spaced Sweep
 
 
 % Results Tensor
@@ -41,35 +41,47 @@ Results = zeros(length(Method_Flag), ...
                 length(Std_Dev_Vel), ...
                 4);
 
+err_x = zeros(length(Method_Flag), ...
+              length(Waveform_Flag), ...
+              length(Motion_Comp_Flag), ...
+              length(Std_Dev_Vel));
+err_y = zeros(length(Method_Flag), ...
+              length(Waveform_Flag), ...
+              length(Motion_Comp_Flag), ...
+              length(Std_Dev_Vel));
+err_z = zeros(length(Method_Flag), ...
+              length(Waveform_Flag), ...
+              length(Motion_Comp_Flag), ...
+              length(Std_Dev_Vel));
+err_3D = zeros(length(Method_Flag), ...
+               length(Waveform_Flag), ...
+               length(Motion_Comp_Flag), ...
+               length(Std_Dev_Vel));
+
 %% ==============================
 % Main Experiment Loops
 % ==============================
 
-for method = 1:length(Method_Flag)
-for waveform = 1:length(Waveform_Flag)
-for motion = 1:length(Motion_Comp_Flag)
-for k = 1:length(Std_Dev_Vel)
+rng(11);% fixing seed value for all scenarios
+for l = 1:Number_of_Iterations
+    % TIMING ANALYSIS: comment out these two lines when not needed
+    iterationTimer = tic;
 
-    % Initialize accumulators
-    err_x = 0;
-    err_y = 0;
-    err_z = 0;
-    err_3D = 0;
-    rng(11);% fixing seed value for all scenarios
-    for l = 1:Number_of_Iterations
-        % TIMING ANALYSIS: comment out these two lines when not needed
-        iterationTimer = tic;
+    % Initialization
+    [struc_constants,struc_trajectory, radar, platform, target] = initialisation_func_v2(l);
 
-        % Initialization
-        [struc_constants,struc_trajectory, radar, platform, target] = initialisation_func_v2(l);
+    % Ground truth
+    peak_rcs = max(target.rcs_lin);
+    row_rcs  = find(target.rcs_lin == peak_rcs,1);
 
-        % Ground truth
-        peak_rcs = max(target.rcs_lin);
-        row_rcs  = find(target.rcs_lin == peak_rcs,1);
+    x_gt = target.xt(row_rcs);
+    y_gt = target.yt(row_rcs);
+    z_gt = target.zt(row_rcs);
 
-        x_gt = target.xt(row_rcs);
-        y_gt = target.yt(row_rcs);
-        z_gt = target.zt(row_rcs);
+    for method = 1:length(Method_Flag)
+    for waveform = 1:length(Waveform_Flag)
+    for motion = 1:length(Motion_Comp_Flag)
+    for k = 1:length(Std_Dev_Vel)
 
         %% ==============================
         % Select Method
@@ -105,38 +117,29 @@ for k = 1:length(Std_Dev_Vel)
         dy = Y_est - y_gt;
         dz = Z_est - z_gt;
 
-        err_x  = err_x  + dx^2;
-        err_y  = err_y  + dy^2;
-        err_z  = err_z  + dz^2;
-        err_3D = err_3D + dx^2 + dy^2 + dz^2;
-        % TIMING ANALYSIS: comment out this line when not needed
-        fprintf('Monte Carlo iteration %d completed in %.3f seconds\n', l, toc(iterationTimer));
+        err_x(method,waveform,motion,k)  = err_x(method,waveform,motion,k)  + dx^2;
+        err_y(method,waveform,motion,k)  = err_y(method,waveform,motion,k)  + dy^2;
+        err_z(method,waveform,motion,k)  = err_z(method,waveform,motion,k)  + dz^2;
+        err_3D(method,waveform,motion,k) = err_3D(method,waveform,motion,k) + dx^2 + dy^2 + dz^2;
+
+    end
+    end
+    end
     end
 
-    %% ==============================
-    % Compute RMSE
-    %% ==============================
-
-    N = Number_of_Iterations;
-
-    rmse_x  = sqrt(err_x  / N);
-    rmse_y  = sqrt(err_y  / N);
-    rmse_z  = sqrt(err_z  / N);
-    rmse_3D = sqrt(err_3D / N);
-
-    %% ==============================
-    % Store Results
-    %% ==============================
-
-    Results(method,waveform,motion,k,1) = rmse_x;
-    Results(method,waveform,motion,k,2) = rmse_y;
-    Results(method,waveform,motion,k,3) = rmse_z;
-    Results(method,waveform,motion,k,4) = rmse_3D;
-
+    % TIMING ANALYSIS: comment out this line when not needed
+    fprintf('Monte Carlo iteration %d completed in %.3f seconds\n', l, toc(iterationTimer));
 end
-end
-end
-end
+
+%% ==============================
+% Compute RMSE
+%% ==============================
+
+N = Number_of_Iterations;
+Results(:,:,:,:,1) = sqrt(err_x  / N);
+Results(:,:,:,:,2) = sqrt(err_y  / N);
+Results(:,:,:,:,3) = sqrt(err_z  / N);
+Results(:,:,:,:,4) = sqrt(err_3D / N);
 
 %% ==============================
 % Convert Results Tensor to Table
