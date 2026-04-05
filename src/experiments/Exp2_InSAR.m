@@ -1,12 +1,6 @@
 %function [range1, cross_range1, h_est] = Exp2_InSAR(radar, platform, target)
-function [r_est, x_est, y_est, z_est] = Exp2_InSAR(radar, platform, target, isac_waveform, waveform, motion, std_dev)
+function [r_est, x_est, y_est, z_est] = Exp2_InSAR(radar, platform, target, isac_waveform, range1, cross_range1, waveform, motion, std_dev)
 Baseline_Z = 10;   % meters (vertical InSAR baseline)
-
-%% ==============================================================
-% PASS 1 : Monostatic SAR
-%% ==============================================================
-
-[x_points_e ,y_points_e ,z_points_e,range1, cross_range1] = SAR_process_mono(platform, radar, target, isac_waveform, waveform, motion, std_dev);
 
 platform_pos_1 = [platform.xc, platform.yc, platform.zc];
 

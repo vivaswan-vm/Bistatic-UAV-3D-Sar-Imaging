@@ -1,11 +1,8 @@
 
-function [r_est, x_est, y_est, z_est] = Exp1_Bistatic_SAR(struc_constants,struc_trajectory,radar, platform, target, isac_waveform, waveform, motion, std_dev)
+function [r_est, x_est, y_est, z_est] = Exp1_Bistatic_SAR(struc_constants,struc_trajectory,radar, platform, target, isac_waveform, x_points_e, y_points_e, z_points_e, range_mono, cross_range_mono, waveform, motion, std_dev)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PART 2
 % Determination of Range and Cross Range in monostatic and bistatic
-
-% Monostatic SAR modeling
-[x_points_e ,y_points_e ,z_points_e,range_mono,cross_range_mono] = SAR_process_mono(platform,radar,target, isac_waveform, waveform, motion, std_dev);
 % BIstatic SAR modeling
 [range_bi,cross_range_bi] = SAR_process_bi(x_points_e ,y_points_e ,z_points_e,struc_constants,struc_trajectory,radar, platform, target, isac_waveform, waveform, motion, std_dev);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
