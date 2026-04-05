@@ -1,4 +1,4 @@
-function [range,cross_range] = SAR_process_bi(x_points_e ,y_points_e ,z_points_e,struc_constants,struc_trajectory,radar, platform, target, waveform, coarse_mocomp_flag, std_dev)
+function [range,cross_range] = SAR_process_bi(x_points_e ,y_points_e ,z_points_e,struc_constants,struc_trajectory,radar, platform, target, isac_waveform, waveform, coarse_mocomp_flag, std_dev)
 
 TotalSwathTime = platform.AzimuthSwathTime + platform.SAT_bi;
 t_slow = -TotalSwathTime/2:radar.PRI:TotalSwathTime/2;
@@ -96,8 +96,7 @@ if waveform == 1
     TxChirp = exp(+1i*pi*Kr.*ChirpTimeSamples.^2);
 else 
     %ISAC Waveform
-    isac = load(project_data_path('ISAC_waveform_v2.mat'));
-    TxChirp = isac.tx(1:length(ChirpTimeSamples));
+    TxChirp = isac_waveform(1:length(ChirpTimeSamples));
 end
 
 % Number of time (Range) samples) (SwathSamples + PulseWidthSamples)
@@ -122,7 +121,6 @@ z_points = repmat(platform.zc_ext,1,length(t_slow));
 x_points_2 = repmat(platform.xc_2_ext,1,length(t_slow));
 y_points_2 = platform.yc_ext+(platform.vc_ext*t_slow);
 z_points_2 = repmat(platform.zc_2_ext,1,length(t_slow));
-NoOfTargets = length(target.zt);
 
 
  % Trajectory followed by UAV2 with error 
@@ -226,7 +224,6 @@ end
 deltaR=(1*radar.lambda^2*(platform.Rc).*((Ka)*(t_slow)).^2)/(8*platform.vc^2);
 range_res = (radar.c*delt)/2;
 cells=round(deltaR/range_res);
-rcm_max= max(cells);
 
 
  for k=1:length(t_slow)
@@ -235,10 +232,6 @@ rcm_max= max(cells);
 
 end
 
-% Azimuth FFT
-for l=1:size(rcmc,2)
-    rcmc(:,l)=fft(rcmc(:,l));
-end
 % Azimuth FFT
 for l=1:size(rcmc,2)
     rcmc(:,l)=fft(rcmc(:,l));
