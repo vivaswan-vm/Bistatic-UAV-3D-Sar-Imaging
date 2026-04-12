@@ -94,7 +94,7 @@ for l = 1:Number_of_Iterations
         % Select Method
         %% ==============================
 
-        if method == 1
+        if Method_Flag(method) == 1
             % Bistatic
         [~, X_est, Y_est, Z_est] = ...
             Exp1_Bistatic_SAR(struc_constants, ...
