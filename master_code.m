@@ -1,6 +1,8 @@
 clc;
 clear;
 
+totalRunTimer = tic;
+
 projectRoot = fileparts(mfilename('fullpath'));
 addpath(genpath(fullfile(projectRoot, 'src')));
 
@@ -146,6 +148,9 @@ for l = 1:Number_of_Iterations
     % TIMING ANALYSIS: comment out this line when not needed
     fprintf('Monte Carlo iteration %d completed in %.3f seconds\n', l, toc(iterationTimer));
 end
+
+fprintf('\n===== TOTAL RUN TIME =====\n');
+fprintf('Total Execution Time: %.6f seconds\n', toc(totalRunTimer));
 
 %% ==============================
 % Compute RMSE
