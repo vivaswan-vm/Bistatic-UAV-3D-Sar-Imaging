@@ -15,8 +15,8 @@ Method_Flag       = [1 2];   % 1 = Bistatic, 2 = InSAR
 Waveform_Flag     = [1 2];   % 1 = FMCW, 2 = ISAC
 Motion_Comp_Flag  = [1 2];   % 1 = With, 2 = Without
 
-Number_of_Iterations = 200;
-Std_Dev_Vel = [0.1  0.5  1.5 1 5 7 10]; % Log Spaced Sweep
+Number_of_Iterations = 120;
+% Std_Dev_Vel = [0.25 0.5 1 2 4 8]; % Log Spaced Sweep
 
 %Test Setup
 % 
