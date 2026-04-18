@@ -16,7 +16,7 @@ Waveform_Flag     = [1 2];   % 1 = FMCW, 2 = ISAC
 Motion_Comp_Flag  = [1 2];   % 1 = With, 2 = Without
 
 Number_of_Iterations = 120;
-% Std_Dev_Vel = [0.25 0.5 1 2 4 8]; % Log Spaced Sweep
+Std_Dev_Vel = [0.25 0.5 1 2 4 8]; % Log Spaced Sweep
 
 %Test Setup
 % 
