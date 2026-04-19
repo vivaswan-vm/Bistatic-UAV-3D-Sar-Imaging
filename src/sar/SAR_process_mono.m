@@ -143,12 +143,30 @@ for tt = 1:NoOfTargets
          del_R_all(j) = (range_wtrme(j)-range_ideal(j) )*cosd(beta); 
         % Delay in fast time samples reference with respect to center range for
         % proper placement of LFM in RawData Matrix
+
+        % Robust Indexing Calculation
+        td(j) = (2*range_wtrme(j))/radar.c - ((2*platform.Rc)/radar.c);
+        td_samples = round(td(j)*(1/delt) + SwathSamples/2);
+        
+        start_idx = td_samples;
+        end_idx   = td_samples + PulseWidthSamples - 1;
+        
+        % THE FIX: Only attempt to write if the pulse is within the simulated window
+        if start_idx >= 1 && end_idx <= rbins
+            s_rx(j, start_idx:end_idx) = target.rcs_lin(tt) .* radar.w_r .* radar.w_a .* ...
+                TxChirp .* exp(-1j*(2*pi*radar.fc*radar.ic*(2*range_wtrme(j))));
+        else
+            % If it's out of bounds, we simply don't record this pulse.
+            % This prevents the crash and simulates the signal being lost.
+            % fprintf('Warning: Signal out of bounds at slow-time index %d\n', j);
+        end
+
        
-         td(j) = (2*range_wtrme(j))/radar.c-(((2*platform.Rc))/radar.c);
-         td_samples = round(round(td(j)*(1/delt))+SwathSamples/2);
+         %td(j) = (2*range_wtrme(j))/radar.c-(((2*platform.Rc))/radar.c);
+         %td_samples = round(round(td(j)*(1/delt))+SwathSamples/2);
         % Final received signal for real trajectory
         
-        s_rx(j,td_samples:td_samples+PulseWidthSamples-1)= target.rcs_lin(tt).*radar.w_r.*radar.w_a.*TxChirp.*exp(-1j*(2*pi*radar.fc*radar.ic*(2*range_wtrme(j))));
+        %s_rx(j,td_samples:td_samples+PulseWidthSamples-1)= target.rcs_lin(tt).*radar.w_r.*radar.w_a.*TxChirp.*exp(-1j*(2*pi*radar.fc*radar.ic*(2*range_wtrme(j))));
     
     end
     RawData = RawData+s_rx;

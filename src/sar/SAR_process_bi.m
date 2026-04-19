@@ -173,13 +173,31 @@ for tt = 1:NoOfTargets
          % td_ref(j)  = (2*range_ref(j))/radar.c-(((platform.Rc_ext+platform.Rc_2_ext))/radar.c);
          % td_ref_samples = round(round(td_ref(j)*(1/delt))+SwathSamples/2);
 
-         td(j) = (range_wtrme1(j)+range_wtrme2(j))/radar.c-(((platform.Rc_ext+platform.Rc_2_ext))/radar.c);
-         td_samples = round(round(td(j)*(1/delt))+SwathSamples/2);
+
+         % 1. Calculate the bistatic delay index
+         td(j) = (range_wtrme1(j) + range_wtrme2(j))/radar.c - ((platform.Rc_ext + platform.Rc_2_ext)/radar.c);
+         td_samples = round(td(j)*(1/delt) + SwathSamples/2);
+         
+         % 2. Define indices
+         start_idx = td_samples;
+         end_idx   = td_samples + PulseWidthSamples - 1;
+         
+         % 3. GUARD: Check bounds before writing to s_rx
+         if start_idx >= 1 && end_idx <= rbins
+             s_rx(j, start_idx:end_idx) = target.rcs_lin(tt) .* radar.w_r .* radar.w_a .* ...
+                 TxChirp .* exp(-1j*(2*pi*radar.fc*radar.ic*(range_wtrme1(j) + range_wtrme2(j))));
+         else
+             % Pulse is outside the sampling window; skipping to prevent crash
+         end
+
+
+         %td(j) = (range_wtrme1(j)+range_wtrme2(j))/radar.c-(((platform.Rc_ext+platform.Rc_2_ext))/radar.c);
+         %td_samples = round(round(td(j)*(1/delt))+SwathSamples/2);
 
 
         % Final received signal for real trajectory for UAV 2
      %   s_rx_ref(j,td_ref_samples:td_ref_samples+PulseWidthSamples-1)= radar.w_r.*radar.w_a.*TxChirp.*exp(-1j*(2*pi*radar.fc*radar.ic*(2*range_ref(j))));
-        s_rx(j,td_samples:td_samples+PulseWidthSamples-1)= target.rcs_lin(tt).*radar.w_r.*radar.w_a.*TxChirp.*exp(-1j*(2*pi*radar.fc*radar.ic*(range_wtrme1(j)+range_wtrme2(j))));
+        %s_rx(j,td_samples:td_samples+PulseWidthSamples-1)= target.rcs_lin(tt).*radar.w_r.*radar.w_a.*TxChirp.*exp(-1j*(2*pi*radar.fc*radar.ic*(range_wtrme1(j)+range_wtrme2(j))));
     
     end
     RawData = RawData+s_rx;
