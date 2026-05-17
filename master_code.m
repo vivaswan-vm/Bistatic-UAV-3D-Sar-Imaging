@@ -203,6 +203,18 @@ Results_Table = table(Method,Waveform,Motion,StdVel,...
 
 disp(Results_Table);
 
+Metric_Names = ["X","Y","Z","3D"];
+
+resultsDir = fullfile(projectRoot, 'results');
+if ~exist(resultsDir, 'dir')
+    mkdir(resultsDir);
+end
+
+save(fullfile(resultsDir, 'Combined_RMSE_Results.mat'), ...
+     'Results', 'Results_Table', ...
+     'Method_Names', 'Waveform_Names', 'Motion_Names', ...
+     'Std_Dev_Vel', 'Metric_Names');
+
 
 %% ==============================
 % Plot RMSE_3D vs Velocity Std Dev

@@ -5,7 +5,7 @@ function plot_results(combinedResultsFile, metricSelection)
 %   plot_results
 %   plot_results('results/Combined_RMSE_Results.mat')
 %   plot_results('results/Combined_RMSE_Results.mat', "X")
-%   plot_results('results/Combined_RMSE_Results.mat', ["X" "Y" "Z" "3D"])
+%   plot_results('results/Combined_RMSE_Results.mat', ["X" "Y" "Z"])
 
 if nargin < 1 || strlength(string(combinedResultsFile)) == 0
     scriptDir = fileparts(mfilename('fullpath'));
@@ -14,11 +14,12 @@ if nargin < 1 || strlength(string(combinedResultsFile)) == 0
 end
 
 if nargin < 2 || strlength(string(metricSelection)) == 0
-    metricSelection = ["X", "Y", "Z", "3D"];
+    metricSelection = ["X", "Y", "Z"];
 end
 
 data = load(combinedResultsFile, 'Results', 'Method_Names', 'Waveform_Names', ...
                             'Motion_Names', 'Std_Dev_Vel', 'Metric_Names');
+[resultsDir, ~, ~] = fileparts(combinedResultsFile);
 
 metricSelection = string(metricSelection);
 if any(strcmpi(metricSelection, "all"))
@@ -48,8 +49,9 @@ end
 end
 
 figure;
-tiledlayout(numel(selectedMetricIdx), numel(data.Motion_Names), ...
-            'TileSpacing', 'compact', 'Padding', 'compact');
+tileLayout = tiledlayout(numel(selectedMetricIdx), numel(data.Motion_Names), ...
+                         'TileSpacing', 'compact', 'Padding', 'compact');
+legendHandles = gobjects(numel(curveLabels), 1);
 
 for metricPlotIdx = 1:numel(selectedMetricIdx)
     metricIdx = selectedMetricIdx(metricPlotIdx);
@@ -64,7 +66,10 @@ for metricPlotIdx = 1:numel(selectedMetricIdx)
         for waveform = 1:numel(data.Waveform_Names)
             rmseCurve = squeeze(data.Results(method, waveform, motion, :, metricIdx));
             smoothRmseCurve = pchip(log10(data.Std_Dev_Vel), rmseCurve, log10(smoothStdVel));
-            plot(smoothStdVel, smoothRmseCurve, lineStyles{curveIdx}, 'LineWidth', 1.6);
+            curveHandle = plot(smoothStdVel, smoothRmseCurve, lineStyles{curveIdx}, 'LineWidth', 1.6);
+            if metricPlotIdx == 1 && motion == 1
+                legendHandles(curveIdx) = curveHandle;
+            end
             curveIdx = curveIdx + 1;
         end
         end
@@ -74,11 +79,13 @@ for metricPlotIdx = 1:numel(selectedMetricIdx)
         ylabel("RMSE - " + data.Metric_Names(metricIdx));
         title(data.Metric_Names(metricIdx) + " RMSE, " + data.Motion_Names(motion));
 
-        if metricPlotIdx == 1 && motion == numel(data.Motion_Names)
-            legend(curveLabels, 'Location', 'northwest');
-        end
     end
 end
 
-sgtitle('RMSE vs Velocity Std Dev');
+plotLegend = legend(legendHandles, curveLabels, 'Orientation', 'horizontal');
+plotLegend.Layout.Tile = 'south';
+sgtitle(tileLayout, 'RMSE vs Velocity Std Dev');
+
+plotFile = fullfile(resultsDir, "RMSE_" + strjoin(data.Metric_Names(selectedMetricIdx), "_") + "_Plots.png");
+exportgraphics(gcf, plotFile, 'Resolution', 300);
 end
