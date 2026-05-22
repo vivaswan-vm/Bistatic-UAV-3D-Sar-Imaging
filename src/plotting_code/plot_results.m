@@ -36,7 +36,8 @@ else
     end
 end
 
-lineStyles = {'-o', '-s', '-^', '-d'};
+lineStyles = {'-', '-', '-', '-'};
+romanLabels = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
 numSmoothPoints = 20;
 smoothStdVel = logspace(log10(min(data.Std_Dev_Vel)), log10(max(data.Std_Dev_Vel)), numSmoothPoints);
 curveLabels = strings(numel(data.Method_Names) * numel(data.Waveform_Names), 1);
@@ -48,10 +49,12 @@ for waveform = 1:numel(data.Waveform_Names)
 end
 end
 
-figure;
+figure('Position', [100 100 1500 1050]);
 tileLayout = tiledlayout(numel(selectedMetricIdx), numel(data.Motion_Names), ...
-                         'TileSpacing', 'compact', 'Padding', 'compact');
+                         'TileSpacing', 'compact', 'Padding', 'loose');
 legendHandles = gobjects(numel(curveLabels), 1);
+panelDescriptions = strings(numel(selectedMetricIdx) * numel(data.Motion_Names), 1);
+panelIdx = 1;
 
 for metricPlotIdx = 1:numel(selectedMetricIdx)
     metricIdx = selectedMetricIdx(metricPlotIdx);
@@ -66,7 +69,9 @@ for metricPlotIdx = 1:numel(selectedMetricIdx)
         for waveform = 1:numel(data.Waveform_Names)
             rmseCurve = squeeze(data.Results(method, waveform, motion, :, metricIdx));
             smoothRmseCurve = pchip(log10(data.Std_Dev_Vel), rmseCurve, log10(smoothStdVel));
-            curveHandle = plot(smoothStdVel, smoothRmseCurve, lineStyles{curveIdx}, 'LineWidth', 1.6);
+            curveHandle = plot(smoothStdVel, smoothRmseCurve, lineStyles{curveIdx}, ...
+                               'LineWidth', 1.6);
+            plot(data.Std_Dev_Vel, rmseCurve, '.k', 'MarkerSize', 7, 'HandleVisibility', 'off');
             if metricPlotIdx == 1 && motion == 1
                 legendHandles(curveIdx) = curveHandle;
             end
@@ -74,16 +79,38 @@ for metricPlotIdx = 1:numel(selectedMetricIdx)
         end
         end
 
-        set(gca, 'XScale', 'log');
-        xlabel('Velocity Std Dev');
-        ylabel("RMSE - " + data.Metric_Names(metricIdx));
-        title(data.Metric_Names(metricIdx) + " RMSE, " + data.Motion_Names(motion));
+        set(gca, 'XScale', 'log', ...
+                 'XTick', data.Std_Dev_Vel, ...
+                 'XTickLabel', compose('%g', data.Std_Dev_Vel));
+        xlabel('Velocity Std Dev (m/s)');
+        ylabel("RMSE-" + data.Metric_Names(metricIdx) + " (m)");
+        text(0.02, 0.90, romanLabels(panelIdx), 'Units', 'normalized', ...
+             'FontWeight', 'bold', 'FontSize', 10, 'BackgroundColor', 'w', ...
+             'Margin', 1);
+
+        if data.Motion_Names(motion) == "WithMC"
+            motionDescription = "with Motion Compensation";
+        else
+            motionDescription = "without Motion Compensation";
+        end
+
+        panelDescriptions(panelIdx) = "Fig " + romanLabels(panelIdx) + ": " + ...
+            data.Metric_Names(metricIdx) + " RMSE Error vs Std Dev Vel " + motionDescription;
+        panelIdx = panelIdx + 1;
 
     end
 end
 
 plotLegend = legend(legendHandles, curveLabels, 'Orientation', 'horizontal');
 plotLegend.Layout.Tile = 'south';
+numCaptionRows = ceil(numel(panelDescriptions) / 2);
+captionRows = strings(numCaptionRows, 1);
+for captionRow = 1:numCaptionRows
+    firstPanel = 2 * captionRow - 1;
+    lastPanel = min(firstPanel + 1, numel(panelDescriptions));
+    captionRows(captionRow) = strjoin(panelDescriptions(firstPanel:lastPanel), " | ");
+end
+plotLegend.Title.String = cellstr(captionRows);
 sgtitle(tileLayout, 'RMSE vs Velocity Std Dev');
 
 plotFile = fullfile(resultsDir, "RMSE_" + strjoin(data.Metric_Names(selectedMetricIdx), "_") + "_Plots.png");
