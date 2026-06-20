@@ -49,11 +49,10 @@ for waveform = 1:numel(data.Waveform_Names)
 end
 end
 
-figure('Position', [100 100 1500 1050]);
+figure('Position', [100 100 900 945]);
 tileLayout = tiledlayout(numel(selectedMetricIdx), numel(data.Motion_Names), ...
                          'TileSpacing', 'compact', 'Padding', 'loose');
 legendHandles = gobjects(numel(curveLabels), 1);
-panelDescriptions = strings(numel(selectedMetricIdx) * numel(data.Motion_Names), 1);
 panelIdx = 1;
 
 for metricPlotIdx = 1:numel(selectedMetricIdx)
@@ -88,14 +87,6 @@ for metricPlotIdx = 1:numel(selectedMetricIdx)
              'FontWeight', 'bold', 'FontSize', 10, 'BackgroundColor', 'w', ...
              'Margin', 1);
 
-        if data.Motion_Names(motion) == "WithMC"
-            motionDescription = "with Motion Compensation";
-        else
-            motionDescription = "without Motion Compensation";
-        end
-
-        panelDescriptions(panelIdx) = "Fig " + romanLabels(panelIdx) + ": " + ...
-            data.Metric_Names(metricIdx) + " RMSE Error vs Std Dev Vel " + motionDescription;
         panelIdx = panelIdx + 1;
 
     end
@@ -103,14 +94,6 @@ end
 
 plotLegend = legend(legendHandles, curveLabels, 'Orientation', 'horizontal');
 plotLegend.Layout.Tile = 'south';
-numCaptionRows = ceil(numel(panelDescriptions) / 2);
-captionRows = strings(numCaptionRows, 1);
-for captionRow = 1:numCaptionRows
-    firstPanel = 2 * captionRow - 1;
-    lastPanel = min(firstPanel + 1, numel(panelDescriptions));
-    captionRows(captionRow) = strjoin(panelDescriptions(firstPanel:lastPanel), " | ");
-end
-plotLegend.Title.String = cellstr(captionRows);
 sgtitle(tileLayout, 'RMSE vs Velocity Std Dev');
 
 plotFile = fullfile(resultsDir, "RMSE_" + strjoin(data.Metric_Names(selectedMetricIdx), "_") + "_Plots.png");
